@@ -65,19 +65,18 @@ def _debarcode_data(bc_key, bc_dat):
 
 def _summarize_singlecell_barcodes(data):
     # prepare a dicitionary containing the barcode
+    idxs = data.index.get_level_values('ImageNumber').unique()
     dic = pd.DataFrame(columns=[
-        'ImageNumber',
         'well',
         'valid_bcs',
         'invalid_bcs',
         'highest_bc_count',
         'second_bc_count'
-    ])
+    ], index=idxs)
 
-    for imagenr in data.index.get_level_values('ImageNumber').unique():
-        temp = {
-            'ImageNumber':int(imagenr)
-        }
+
+    for imagenr in idxs:
+        temp = dict()
         summary = data.xs(imagenr, level='ImageNumber')[NAME_WELLCOLUMN].value_counts()
         try:
             temp['invalid_bcs']=summary[NAME_INVALID]
@@ -91,6 +90,6 @@ def _summarize_singlecell_barcodes(data):
             temp['second_bc_count']=summary[summary.keys()[1]]
         else:
             temp['second_bc_count']=0
-        dic.loc[len(dic)]= temp
+        dic.loc[imagenr]= temp
     return dic
 
