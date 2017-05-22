@@ -38,14 +38,11 @@ def debarcode(plot_cells, bc_key, dist = 30):
     amb_fil = plot_cells['filter','is-ambiguous'] == False
 
     data = plot_cells['MeanIntensity'].loc[(plot_cells[('MeanIntensity','dist-rim')] < dist) & amb_fil, :]
-    data = data.loc[:, [c for c in data.columns if (any(m in c for m in metals))]]
+    data = data[order]
     data = data.apply(lambda x: (x-np.mean(x))/np.std(x),)
     data[data > 0] = 1
     data[data < 0] = 0
     data = data.rename(columns={chan: ''.join(c for c in chan if c.isdigit()) for chan in data.columns})
-    data.columns = data.columns.map(lambda x: int(x))
-    data.reindex_axis(sorted(data), axis=1)
-    data.columns = data.columns.map(lambda x: str(x))
     data['barcode'] = data[bcmass].apply(lambda x: ''.join([str(int(v)) for v in x]),axis=1)
     data['well'] = [bc_dict.get(b, 'invalid') for b in data['barcode']]
 
@@ -58,7 +55,6 @@ def debarcode(plot_cells, bc_key, dist = 30):
     data = data.reset_index(drop=False, level=['well', 'barcode'], name='present')
 
     for imagenr in data.index.get_level_values('ImageNumber').unique():
-        #TODO: catch indexError and propose increase of range.
         temp = {
             'ImageNumber':int(imagenr)
         }
