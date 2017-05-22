@@ -31,7 +31,6 @@ def debarcode(data, bc_key, dist = 30):
     data = _debarcode_data(bc_key, data)
     bc_dic = _summarize_singlecell_barcodes(data)
     data = data.drop('present', axis=1)
-    
     return bc_dic, data
 
 def _treshold_data(bc_dat):
@@ -66,30 +65,22 @@ def _debarcode_data(bc_key, bc_dat):
 def _summarize_singlecell_barcodes(data):
     # prepare a dicitionary containing the barcode
     idxs = data.index.get_level_values('ImageNumber').unique()
-    dic = pd.DataFrame(columns=[
-        'well',
-        'valid_bcs',
-        'invalid_bcs',
-        'highest_bc_count',
-        'second_bc_count'
-    ], index=idxs)
-
-
-    for imagenr in idxs:
-        temp = dict()
-        summary = data.xs(imagenr, level='ImageNumber')[NAME_WELLCOLUMN].value_counts()
-        try:
-            temp['invalid_bcs']=summary[NAME_INVALID]
-            del(summary[NAME_INVALID])
-        except KeyError:
-            temp['invalid_bcs']=0
-        temp['well']=summary.keys()[0]
-        temp['valid_bcs']=summary.sum()
-        temp['highest_bc_count']=summary[temp['well']]
-        if len(summary) > 1:
-            temp['second_bc_count']=summary[summary.keys()[1]]
-        else:
-            temp['second_bc_count']=0
-        dic.loc[imagenr]= temp
+    dic = data.groupby(level='ImageNumber').apply(_aggregate_barcodes)
     return dic
 
+def _aggregate_barcodes(dat):
+    temp = dict()
+    summary = dat[NAME_WELLCOLUMN].value_counts()
+    try:
+        temp['invalid_bcs']=summary[NAME_INVALID]
+        del(summary[NAME_INVALID])
+    except KeyError:
+        temp['invalid_bcs']=0
+    temp['well']=summary.keys()[0]
+    temp['valid_bcs']=summary.sum()
+    temp['highest_bc_count']=summary[temp['well']]
+    if len(summary) > 1:
+        temp['second_bc_count']=summary[summary.keys()[1]]
+    else:
+        temp['second_bc_count']=0
+    return pd.Series(temp)
