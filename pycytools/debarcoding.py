@@ -15,7 +15,9 @@ def debarcode(data, bc_key, dist = 30):
     Debarcode a Dataframe from the image data.
 
     Args:
-        DataFrame plot_cells:   the image data from cellprofiler, prepared as usual (improve doc)
+        DataFrame plot_cells:   the filtered image data from cellprofiler, containing the indexes
+                                'ImageNumber', 'ObjectNumber' and the columns specified
+                                in the barcoding key.
         DataFrame bc_key:       the barcoding key. The column indexes should specify the metal
                                 column in plot_cells. the well column MUST be designated
                                 by 'well'.
@@ -23,7 +25,8 @@ def debarcode(data, bc_key, dist = 30):
                                 for barcoding.
 
     Returns:
-        dictionary {imageNumber => well}
+        bc_dic: DataFrame containing debarcoding information on image level
+        data: DataFrame containing assigned barcode on single cell level.
     """
 
     data = data.copy()
