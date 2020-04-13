@@ -6,6 +6,7 @@ import ipywidgets as ipw
 import functools as ft
 import pycytools.library as lib
 import skimage as ski
+from scipy.ndimage.filters import gaussian_filter
 
 
 def plot_rgb_imc(imc_img, metals, norm_perc=99.9, sigma=1, outlierthresh=30, saturation=1):
@@ -31,7 +32,7 @@ def plot_rgbw_imc(imc_img, metals, w_metal, white_weight=0.4, norm_perc=99.9, si
 
 def _preproc_img_stack(imgstack, norm_perc=99.9, sigma=1, outlierthresh=30):
     imgstack = [lib.remove_outlier_pixels(im.astype(np.uint16), threshold=outlierthresh) for im in imgstack]
-    imgstack = [ski.filters.gaussian_filter(im, sigma=sigma) for im in imgstack]
+    imgstack = [gaussian_filter(im, sigma=sigma) for im in imgstack]
     imgstack = [im.astype(np.float) / np.percentile(im, norm_perc) for im in imgstack]
     for im in imgstack:
         im[im > 1] = 1
