@@ -5,52 +5,51 @@ Contains various functions for image processing
 """
 
 from __future__ import division
-import numpy as np
-import skimage as sk
-import scipy as sp
-from scipy import ndimage as ndi
 
+import json
+import os
+
+import numpy as np
+import pandas as pd
+import requests
+import scipy as sp
+import skimage as sk
+import tifffile
+import tifffile as tif
+from scipy import ndimage as ndi
 from skimage import filters
 from skimage import measure
-from skimage import transform
 from skimage import morphology
+from skimage import transform
 
-import tifffile as tif
-
-import pandas as pd
-
-import requests
-import json
-
-import os
-import tifffile
 
 def remove_outlier_pixels(img, threshold=50, mode='median'):
-    mask = np.ones((3,3))
-    mask[1,1] = 0
+    mask = np.ones((3, 3))
+    mask[1, 1] = 0
     img_median = filters.rank.median(img, mask)
 
     if mode == 'max':
         img_max = filters.rank.maximum(img, mask)
-        imgfil = (img-img_max) > threshold
+        imgfil = (img - img_max) > threshold
     elif mode == 'median':
-        imgfil = (img-img_median) > threshold
+        imgfil = (img - img_median) > threshold
     else:
-        raise('Mode must be: max or median')
+        raise ('Mode must be: max or median')
     img_out = img.copy()
     img_out[imgfil] = img_median[imgfil]
     return img_out
 
-def scale_images(img, cap_percentile=99, rescale = False):
-        perc = np.percentile(img, cap_percentile)
-        img[img > perc] = perc
-        if rescale:
-            img = sk.exposure.rescale_intensity(img)
-        return img
+
+def scale_images(img, cap_percentile=99, rescale=False):
+    perc = np.percentile(img, cap_percentile)
+    img[img > perc] = perc
+    if rescale:
+        img = sk.exposure.rescale_intensity(img)
+    return img
 
 
 def normalize_images(img, **kwargs):
-        img = sk.exposure.equalize_hist(img, **kwargs)
+    img = sk.exposure.equalize_hist(img, **kwargs)
 
 
 def threshold_images(img, method='otsu',
@@ -59,7 +58,6 @@ def threshold_images(img, method='otsu',
                      fill=False,
                      block_size=10,  # only for adaptive
                      **kwargs):
-
     if method.lower() == 'otsu':
         thresh = filters.threshold_otsu(img)
 
@@ -79,7 +77,7 @@ def threshold_images(img, method='otsu',
     elif method.lower() == 'manual':
         if thresh is None:
             raise NameError(
-            'when using manual thresholding, supply a threshold')
+                'when using manual thresholding, supply a threshold')
 
     else:
         raise NameError('Invalid threshold method used')
@@ -120,7 +118,6 @@ def stretch_imgs_equal(img_list,
                        direction='min',  # min or max
                        interpol=None  # which interpolation algorithm
                        ):
-
     heights = np.array([float(img.shape[0]) for img in img_list])
     widths = np.array([float(img.shape[1]) for img in img_list])
 
@@ -133,19 +130,19 @@ def stretch_imgs_equal(img_list,
         h_ref = heights.max()
 
     if stretch_dim == 'w':
-        w_scale = widths/float(w_ref)
+        w_scale = widths / float(w_ref)
         h_scale = w_scale
 
     if stretch_dim == 'h':
-        h_scale = heights/float(h_ref)
+        h_scale = heights / float(h_ref)
         w_scale = h_scale
 
     if stretch_dim == 'b':
-        h_scale = heights/float(h_ref)
-        w_scale = widths/float(w_ref)
+        h_scale = heights / float(h_ref)
+        w_scale = widths / float(w_ref)
 
-    widths = np.floor(widths/w_scale)
-    heights = np.floor(heights/h_scale)
+    widths = np.floor(widths / w_scale)
+    heights = np.floor(heights / h_scale)
     # stretch everything to max widht/maxheight
     out_imgs = list()
     for (img, w, h) in zip(img_list, widths, heights):
@@ -159,18 +156,19 @@ def blur_img_gauss(img, sigma=1, idKeys=None):
     blur_img = filters.gaussian_filter(img, sigma=sigma)
     return blur_img
 
-def l2l_corr(img,dim=0):
+
+def l2l_corr(img, dim=0):
     '''Calculates the line to line correlations between all lines of an image,
     represented as a 2D matrix img'''
     if dim == 0:
         img = img.T
 
     nCol = img.shape[1]
-    corrArray = np.zeros(nCol-1)
+    corrArray = np.zeros(nCol - 1)
 
-    for i in range(nCol-1):
-        corrArray[i] = np.corrcoef(img[:,i], img[:,i+1])[1,0]
-    return(corrArray)
+    for i in range(nCol - 1):
+        corrArray[i] = np.corrcoef(img[:, i], img[:, i + 1])[1, 0]
+    return (corrArray)
 
 
 ### tools for dealing with segmentation masks
@@ -185,12 +183,13 @@ def query_clone_infos_airlab(ids):
 
     resp_dict = dict()
     for id in ids:
-        resp = requests.get('http://airlaboratory.ch/apiLabPad/api/getInfoForClone/'+str(id))
+        resp = requests.get('http://airlaboratory.ch/apiLabPad/api/getInfoForClone/' + str(id))
         resp_entry = json.loads(resp.text)
         if (resp_entry != '0') & (len(resp_entry) > 0):
             resp_dict[id] = resp_entry[0]
 
     return resp_dict
+
 
 def query_clone_names_airlab(ids, name_fields=['proName', "cloBindingRegion"], sep=' - '):
     """
@@ -211,8 +210,8 @@ def query_clone_names_airlab(ids, name_fields=['proName', "cloBindingRegion"], s
         except:
             out_names.append(None)
 
+    return out_names
 
-    return  out_names
 
 def get_id_from_name(name):
     """
@@ -229,6 +228,7 @@ def get_id_from_name(name):
 
     return newname
 
+
 def get_id_from_airlabname(name):
     """
     Directly get the clonenames from raulnames
@@ -244,6 +244,7 @@ def get_id_from_airlabname(name):
 
     return newname
 
+
 def get_names_from_airlabnames(names):
     """
     Tries to query a nice airlab name based on the id in the name.
@@ -257,7 +258,7 @@ def get_names_from_airlabnames(names):
 
     namedict = {name: al_name for name, al_name in zip(names, al_names) if al_name is not None}
 
-    newnames = [namedict.get(n,n) for n in names]
+    newnames = [namedict.get(n, n) for n in names]
 
     return newnames
 
@@ -284,7 +285,7 @@ def find_touching_pixels(label_img, distance=1, selem=None):
     for i in np.unique(label_img):
         if i != 0:
             cur_lab = (label_img == i)
-            #touch_mask[ndi.filters.maximum_filter(cur_lab,  footprint=selem) &
+            # touch_mask[ndi.filters.maximum_filter(cur_lab,  footprint=selem) &
             #           not_bg & (cur_lab == False)] = 1
 
             touch_mask[ndi.binary_dilation(cur_lab, structure=selem, iterations=distance, mask=not_bg) &
@@ -293,20 +294,20 @@ def find_touching_pixels(label_img, distance=1, selem=None):
     return touch_mask
 
 
-
 def scale_labelmask(labelmask, scale):
-    #assert (scaling % 1) == 0, "only integer scaling supported!"
+    # assert (scaling % 1) == 0, "only integer scaling supported!"
 
     # rescale
-    trans_labs = transform.rescale(labelmask+1,scale=scale, preserve_range=True)
+    trans_labs = transform.rescale(labelmask + 1, scale=scale, preserve_range=True)
 
-    trans_labs[(trans_labs %1) > 0] =1
-    trans_labs = np.round(trans_labs)-1
+    trans_labs[(trans_labs % 1) > 0] = 1
+    trans_labs = np.round(trans_labs) - 1
     #
     tmplabels = ndi.uniform_filter(trans_labs, size=2)
     trans_labs[trans_labs != tmplabels] = 0
 
     return trans_labs.astype(np.int)
+
 
 def extract_mean_markers_by_mask(label_image, img_stack):
     label_image = np.squeeze(label_image)
@@ -324,7 +325,8 @@ def extract_mean_markers_by_mask(label_image, img_stack):
 
     return label_dict
 
-def apply_functions_to_labels(label_image, img_stack, fkt_list ,out_array=None):
+
+def apply_functions_to_labels(label_image, img_stack, fkt_list, out_array=None):
     """
 
     :param label_img:
@@ -336,32 +338,31 @@ def apply_functions_to_labels(label_image, img_stack, fkt_list ,out_array=None):
     label_image = np.squeeze(label_image)
     objects = ndi.find_objects(label_image)
 
-    objects = [(i+1, sl) for i, sl in enumerate(objects) if sl is not None]
+    objects = [(i + 1, sl) for i, sl in enumerate(objects) if sl is not None]
     nobj = len(objects)
     nchannels = img_stack.shape[2]
-    out_shape = (nobj*nchannels, len(fkt_list)+1)
+    out_shape = (nobj * nchannels, len(fkt_list) + 1)
     if out_array is None:
         out_array = np.empty(out_shape)
     else:
-        assert out_array.shape == out_shape, (out_array.shape,out_shape)
+        assert out_array.shape == out_shape, (out_array.shape, out_shape)
 
     for i, (label, sl) in enumerate(objects):
-
-        out_idx = np.s_[(i*nchannels):((i+1)*nchannels)]
+        out_idx = np.s_[(i * nchannels):((i + 1) * nchannels)]
 
         img_sl = img_stack[sl]
         print(img_stack.shape, label_image.shape)
         mask = label_image[sl] == label
         sl_image = [img_sl[..., i] for i in range(img_sl.shape[2])]
         t_out_array = out_array[out_idx]
-        x= np.array([[fkt(mask, img) for fkt in fkt_list] for img in sl_image])
-        t_out_array[:, 1:]= x
+        x = np.array([[fkt(mask, img) for fkt in fkt_list] for img in sl_image])
+        t_out_array[:, 1:] = x
         t_out_array[:, 0] = label
-
 
     return out_array
 
-def apply_functions_to_list_of_labels(label_image_list, img_stack_list, fkt_list ,out_array=None):
+
+def apply_functions_to_list_of_labels(label_image_list, img_stack_list, fkt_list, out_array=None):
     """
 
     :param ids:
@@ -372,7 +373,7 @@ def apply_functions_to_list_of_labels(label_image_list, img_stack_list, fkt_list
     :return:
     """
 
-    nobjs = [len(np.unique(labs))-1 for labs in label_image_list]
+    nobjs = [len(np.unique(labs)) - 1 for labs in label_image_list]
     nchannels = img_stack_list[0].shape[2]
     nfkts = len(fkt_list)
 
@@ -381,15 +382,15 @@ def apply_functions_to_list_of_labels(label_image_list, img_stack_list, fkt_list
     if out_array is None:
         out_array = np.empty(out_shape)
     else:
-        assert(out_array.shape == out_shape)
+        assert (out_array.shape == out_shape)
 
     last_idx = 0
     for i, (labs, img_stack) in enumerate(zip(label_image_list, img_stack_list)):
-        next_idx = (last_idx+nobjs[i]*nchannels)
+        next_idx = (last_idx + nobjs[i] * nchannels)
         out_idx = np.s_[(last_idx):next_idx]
-        t_out_array = out_array[out_idx,:]
+        t_out_array = out_array[out_idx, :]
         t_out_array[:, 0] = i
-        apply_functions_to_labels(labs, img_stack, fkt_list, out_array = t_out_array[:,1:])
+        apply_functions_to_labels(labs, img_stack, fkt_list, out_array=t_out_array[:, 1:])
         last_idx = next_idx
 
     return out_array
@@ -409,7 +410,7 @@ def apply_functions_to_list_of_labels_table(label_image_list,
     """
     dat = apply_functions_to_list_of_labels(label_image_list, img_stack_list, fkt_list)
     dat = pd.DataFrame(dat, columns=['cut_id', 'cell_id'] + list(fkt_names))
-    dat['channel'] = np.tile(np.array(channel_names), dat.shape[0]/len(channel_names))
+    dat['channel'] = np.tile(np.array(channel_names), dat.shape[0] / len(channel_names))
 
     if slice_ids is not None:
         slice_ids = np.array(slice_ids)
@@ -419,7 +420,8 @@ def apply_functions_to_list_of_labels_table(label_image_list,
     dat.columns.names = ['stat', 'channel']
     return dat
 
-def extend_slice_touple(slice_touple, extent, max_dim ,min_dim =(0,0)):
+
+def extend_slice_touple(slice_touple, extent, max_dim, min_dim=(0, 0)):
     """
     Extends a numpy slice touple, e.g. corresponding to a bounding box
     :param slice_touple: a numpy slice
@@ -430,11 +432,11 @@ def extend_slice_touple(slice_touple, extent, max_dim ,min_dim =(0,0)):
 
     """
 
-
-    new_slice = tuple(_extend_slice(s,extent, d_max, d_min) for s, d_max, d_min in
-          zip(slice_touple, max_dim, min_dim))
+    new_slice = tuple(_extend_slice(s, extent, d_max, d_min) for s, d_max, d_min in
+                      zip(slice_touple, max_dim, min_dim))
 
     return new_slice
+
 
 def _extend_slice(sl, extent, dim_max, dim_min=0):
     """
@@ -446,11 +448,10 @@ def _extend_slice(sl, extent, dim_max, dim_min=0):
     :return: the new extended slice
     """
 
-    x_start = max(sl.start-extent,dim_min)
-    x_end = min(sl.stop+ extent, dim_max)
+    x_start = max(sl.start - extent, dim_min)
+    x_end = min(sl.stop + extent, dim_max)
 
     return np.s_[x_start:x_end]
-
 
 
 def add_slice_dimension(sl, append=True):
@@ -465,11 +466,11 @@ def add_slice_dimension(sl, append=True):
     if append:
         exsl = tuple([s for s in sl] + [np.s_[:]])
     else:
-        exsl = tuple([np.s_[:]]+[s for s in sl])
+        exsl = tuple([np.s_[:]] + [s for s in sl])
     return exsl
 
 
-def map_series_on_mask(mask, series, label = None):
+def map_series_on_mask(mask, series, label=None):
     """
     TODO: A good docstring here
     :param mask:
@@ -482,16 +483,15 @@ def map_series_on_mask(mask, series, label = None):
 
     # make a dict
 
-
-    labeldict = np.empty(mask.max()+1)
+    labeldict = np.empty(mask.max() + 1)
     labeldict[:] = np.NaN
 
     for lab, val in zip(label, series):
         labeldict[int(lab)] = val
 
     out_img = labeldict[mask.flatten()]
-    out_img = np.reshape(out_img,mask.shape)
-    out_img = np.ma.array(out_img, mask = mask==0)
+    out_img = np.reshape(out_img, mask.shape)
+    out_img = np.ma.array(out_img, mask=mask == 0)
     return out_img
 
 
@@ -512,7 +512,6 @@ def create_neightbourhood_dict(label_mask, bg_label=0):
             nb_dict[e[1]].append(e[0])
 
     return nb_dict
-
 
 
 def make_neighbourhood_graph(label_mask, uni_edges=True):
@@ -567,13 +566,14 @@ def save_object_stack(folder, basename, img_stack, slices):
 
         exsl = add_slice_dimension(sl, append=False)
 
-        fn = os.path.join(folder, basename + '_l' + str(lab + 1) + '_x' + str(x) + '_y' + str(y)+'.tiff')
+        fn = os.path.join(folder, basename + '_l' + str(lab + 1) + '_x' + str(x) + '_y' + str(y) + '.tiff')
 
         with tifffile.TiffWriter(fn, imagej=True) as tif:
             timg = img_stack[exsl]
 
             for chan in range(timg.shape[0]):
                 tif.save(timg[chan, :, :].squeeze())
+
 
 ## for processing cellprofiler output
 def name_from_metal(metal, namedict, sep=None):
@@ -587,6 +587,7 @@ def name_from_metal(metal, namedict, sep=None):
         sep = '_'
     newname = sep.join([namedict.get(metal, metal), metal])
     return newname
+
 
 def metal_from_name(name, sep=None):
     """
@@ -630,9 +631,11 @@ def add_masks_to_imgdata(dat_image, mask_fncol, base_folder, re_meta):
     dat_image['site'] = [g['site'] for g in groupdicts]
 
     dat_image['h'], dat_image['w'] = zip(*dat_image['mask'].map(lambda x: x.shape))
-    dat_image['slice'] = dat_image.apply(lambda x: [(np.s_[x['x']:(x['x'] + x['h'])], np.s_[x['y']:(x['y'] + x['w'])])], axis=1)
+    dat_image['slice'] = dat_image.apply(lambda x: [(np.s_[x['x']:(x['x'] + x['h'])], np.s_[x['y']:(x['y'] + x['w'])])],
+                                         axis=1)
     dat_image['slice'] = dat_image['slice'].map(lambda x: x[0])
     return dat_image
+
 
 # varia
 def get_real_dist2rim(x_dist, radius_cut, radius_sphere):
@@ -643,7 +646,7 @@ def get_real_dist2rim(x_dist, radius_cut, radius_sphere):
     :param radius_sphere:
     :return:
     """
-    x_transf = x_dist* ((radius_sphere)-np.sqrt((radius_sphere)**2-(radius_cut)**2))/radius_cut
+    x_transf = x_dist * ((radius_sphere) - np.sqrt((radius_sphere) ** 2 - (radius_cut) ** 2)) / radius_cut
     return x_transf
 
 
@@ -653,7 +656,7 @@ def aggregate_nb_data(cell_dat, nb_dict, fil=None, agg_fkt=np.mean, out_array=No
     if fil is None:
         fil_idx = []
     else:
-        fil_idx = cell_dat.index[fil==False]
+        fil_idx = cell_dat.index[fil == False]
 
     if out_array is not None:
         nb_dat = out_array
@@ -662,16 +665,14 @@ def aggregate_nb_data(cell_dat, nb_dict, fil=None, agg_fkt=np.mean, out_array=No
         out_dat.loc[:] = np.nan
         nb_dat = out_dat.values
 
-
-    id_dict = {cellid: int(idx) for  idx, cellid in enumerate(cell_dat.index) if cellid not in fil_idx}
+    id_dict = {cellid: int(idx) for idx, cellid in enumerate(cell_dat.index) if cellid not in fil_idx}
     dat_idx = id_dict.keys()
-
 
     for cid, nids in nb_dict.items():
         if (nids != []) & (cid in dat_idx) & all(i in dat_idx for i in nids):
-            nidxs = np.array([id_dict[i] for i in nids if i !=cid])
+            nidxs = np.array([id_dict[i] for i in nids if i != cid])
             if nidxs != []:
-                nb_dat[id_dict[cid], :] =  np.apply_along_axis(agg_fkt, 0, cell_dat.values[nidxs, :])
+                nb_dat[id_dict[cid], :] = np.apply_along_axis(agg_fkt, 0, cell_dat.values[nidxs, :])
 
     if out_array is not None:
         return True
@@ -685,11 +686,10 @@ def aggregate_nb_data_imgs(cell_dat_img, nb_dicts, value_col='cell_int_mean', ag
     Aggregates data based on neighbouhood dicts
     """
 
-
-    assert(len(cell_dat_img.index.names) == 2)
+    assert (len(cell_dat_img.index.names) == 2)
 
     if cell_dat_img.index.names[0] != imgid_level:
-        cell_dat_img = cell_dat_img.swaplevel(0,1, axis=0)
+        cell_dat_img = cell_dat_img.swaplevel(0, 1, axis=0)
 
     out_dats = cell_dat_img[value_col].copy()
     out_dats.loc[:] = np.nan
@@ -703,27 +703,25 @@ def aggregate_nb_data_imgs(cell_dat_img, nb_dicts, value_col='cell_int_mean', ag
         else:
             nb_dict = nb_dicts.xs(imgid, level=imgid_level)[0]
 
-
         if fil_col is not None:
             fil = cell_dat.loc[:, fil_col] == True
         else:
-            fil=None
+            fil = None
 
         in_cell_dat = cell_dat.loc[:, value_col]
         aggregate_nb_data(cell_dat=in_cell_dat, nb_dict=nb_dict, fil=fil, agg_fkt=agg_fkt,
-                                   out_array=out_dats.loc[imgid].values)
+                          out_array=out_dats.loc[imgid].values)
 
     out_dats = pd.concat({out_value_col: out_dats}, axis=1, names=cell_dat_img.columns.names)
     return out_dats
-
 
 
 def get_nb_dict(coldat):
     """
     Converts relationship lists to dict
     """
-    first_obj =coldat.iloc[:,0]
-    second_obj=coldat.iloc[:,1]
+    first_obj = coldat.iloc[:, 0]
+    second_obj = coldat.iloc[:, 1]
 
     nb_dict = dict((obj, set()) for obj in np.unique(first_obj))
 

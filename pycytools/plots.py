@@ -1,7 +1,8 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import pycytools.library as lib
+import numpy as np
 from scipy.ndimage.filters import gaussian_filter
+
+import pycytools.library as lib
 
 
 def plot_rgb_imc(imc_img, metals, norm_perc=99.9, sigma=1, outlierthresh=30, saturation=1):
@@ -9,8 +10,8 @@ def plot_rgb_imc(imc_img, metals, norm_perc=99.9, sigma=1, outlierthresh=30, sat
     imgstack = [imc_img.get_img_by_metal(m) for m in metals]
     imgstack = _preproc_img_stack(imgstack, norm_perc, sigma, outlierthresh)
     pimg = np.stack(imgstack, axis=2)
-    pimg = pimg*saturation
-    pimg[pimg > 1] =1
+    pimg = pimg * saturation
+    pimg[pimg > 1] = 1
     plt.imshow(pimg, interpolation='nearest')
     plt.axis('off')
 
@@ -51,7 +52,7 @@ def get_7_color_img(imc_img, metals, norm_perc=99.9, alphas=None, sigma=1, outli
     imgstack = [np.stack([im * c * a for c in col], axis=2) for im, col, a in zip(imgstack, curcols, alphas)]
 
     pimg = np.sum(imgstack, axis=0)
-    pimg = pimg*saturation
+    pimg = pimg * saturation
     pimg[pimg > 1] = 1
 
     return pimg.squeeze()
@@ -62,11 +63,6 @@ def plot_7_color_img(imc_img, metals, norm_perc=99.9, alphas=None, sigma=1, outl
     pimg = get_7_color_img(imc_img, metals, norm_perc, alphas, sigma, outlierthresh, saturation)
     plt.imshow(pimg.squeeze(), interpolation='nearest')
     plt.axis('off')
-
-
-
-
-
 
     # def ipw_marker_vs_marker(pdat, transf_dict, name_dict, col_level1='measure', col_level2='mass', cut_level='ImageNumber')
 #     stat = pdat.columns.get_level_values(col_level1)

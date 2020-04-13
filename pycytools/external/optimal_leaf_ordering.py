@@ -5,7 +5,6 @@
 import itertools
 
 import numpy as np
-
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
 
@@ -15,9 +14,9 @@ def order_tree(Z, rd, M):
         n.right, n.left = n.left, n.right
 
     for v in xrange(Z.shape[0] * 2, Z.shape[0], -1):
-        L,R = rd[v].left.pre_order(), rd[v].right.pre_order()
-        u,w = min(itertools.product(L, R),
-                  key=lambda (u,w): M[v, u, w])
+        L, R = rd[v].left.pre_order(), rd[v].right.pre_order()
+        u, w = min(itertools.product(L, R),
+                   key=lambda (u, w): M[v, u, w])
 
         if rd[v].left.count > 1:
             LR = rd[v].left.right.pre_order()
@@ -45,7 +44,7 @@ def optimal_scores(Z, rd, dists):
         # linkage matrix starts at first non-leaf node
         v = n_nodes + i
         # the left and right nodes
-        j,k = int(Z[i, 0]), int(Z[i, 1])
+        j, k = int(Z[i, 0]), int(Z[i, 1])
 
         if Z[i, 3] == 2:
             # both j and k are leaves, so there is no ordering to be done
@@ -54,31 +53,31 @@ def optimal_scores(Z, rd, dists):
             # if j is a leaf, we calculate the distances to all
             # subtrees of k
             kwns = [kwn for kwn in M if kwn[0] == k]
-            for k,w,n in kwns:
-                M[v, j, n] = M[v, n, j] = M[k, w, n] + dists[j,w]
-                M[v, j, w] = M[v, w, j] = M[k, w, n] + dists[j,n]
+            for k, w, n in kwns:
+                M[v, j, n] = M[v, n, j] = M[k, w, n] + dists[j, w]
+                M[v, j, w] = M[v, w, j] = M[k, w, n] + dists[j, n]
         elif rd[k].is_leaf():
             # symmetrically if k is a leaf
             jums = [jum for jum in M if jum[0] == j]
-            for j,u,m in jums:
-                M[v, m, k] = M[v, k, m] = M[j, u, m] + dists[k,u]
-                M[v, u, k] = M[v, k, u] = M[j, u, m] + dists[k,m]
+            for j, u, m in jums:
+                M[v, m, k] = M[v, k, m] = M[j, u, m] + dists[k, u]
+                M[v, u, k] = M[v, k, u] = M[j, u, m] + dists[k, m]
         else:
             # neither j nor k are leaves, so we consider combinations of subtrees
-            LL,LR = rd[j].left.pre_order(), rd[j].right.pre_order()
-            RL,RR = rd[k].left.pre_order(), rd[k].right.pre_order()
+            LL, LR = rd[j].left.pre_order(), rd[j].right.pre_order()
+            RL, RR = rd[k].left.pre_order(), rd[k].right.pre_order()
 
-            for (this_L,that_L),(this_R,that_R) in itertools.product(((LL,LR), (LR,LL)),
-                                                                     ((RL,RR), (RR,RL))):
-                for u,w in itertools.product(this_L, this_R):
+            for (this_L, that_L), (this_R, that_R) in itertools.product(((LL, LR), (LR, LL)),
+                                                                        ((RL, RR), (RR, RL))):
+                for u, w in itertools.product(this_L, this_R):
                     m_order = sorted(that_L, key=lambda m: M[j, u, m])
                     n_order = sorted(that_R, key=lambda n: M[k, w, n])
                     C = dists[np.ix_(m_order, n_order)].min()
                     Cmin = 1e10
-                    for m,n in itertools.product(m_order, n_order):
+                    for m, n in itertools.product(m_order, n_order):
                         if M[j, u, m] + M[k, w, n] + C >= Cmin:
                             break
-                        C = M[j, u, m] + M[k, w, n] + dists[m,n]
+                        C = M[j, u, m] + M[k, w, n] + dists[m, n]
                         if C < Cmin:
                             Cmin = C
 
@@ -92,7 +91,7 @@ def optimal_ordering(Z, dists):
     # dists - the distance matrix
 
     # get the tree and a list of handles to its leaves
-    tree,rd = hierarchy.to_tree(Z, True)
+    tree, rd = hierarchy.to_tree(Z, True)
 
     # Generate scores
     M = optimal_scores(Z, rd, dists)
@@ -112,8 +111,8 @@ def plot_leaf_ordering(X, method, metric):
     Z = hierarchy.linkage(X, method=method, metric=metric)
     Z2 = hierarchy.linkage(X.T, method=method, metric=metric)
 
-    t,rd = hierarchy.to_tree(Z, True)
-    t2,rd2 = hierarchy.to_tree(Z2, True)
+    t, rd = hierarchy.to_tree(Z, True)
+    t2, rd2 = hierarchy.to_tree(Z2, True)
 
     M = optimal_scores(Z, rd, dists)
     order_tree(Z, rd, M)
@@ -126,22 +125,22 @@ def plot_leaf_ordering(X, method, metric):
     import matplotlib.pyplot as plt
     from matplotlib.gridspec import GridSpec
 
-    fig = plt.figure(figsize=(8,8))
+    fig = plt.figure(figsize=(8, 8))
     gs = GridSpec(2, 2, top=0.95, bottom=0.05, left=0.05, right=0.95,
                   hspace=0.01, wspace=0.01,
-                  width_ratios=(1,3), height_ratios=(1,3))
+                  width_ratios=(1, 3), height_ratios=(1, 3))
 
-    ax01 = fig.add_subplot(gs[0,1])
-    ax10 = fig.add_subplot(gs[1,0])
-    ax11 = fig.add_subplot(gs[1,1])
+    ax01 = fig.add_subplot(gs[0, 1])
+    ax10 = fig.add_subplot(gs[1, 0])
+    ax11 = fig.add_subplot(gs[1, 1])
 
     hierarchy.dendrogram(Z2, ax=ax01)
     ax01.set_axis_off()
     hierarchy.dendrogram(Z, orientation='right', ax=ax10)
     ax10.set_axis_off()
 
-    ax11.matshow(X[np.ix_(rr,rr2)], cmap="Blues", aspect="auto")
-    ax11.tick_params(**{s:'off' for s in ('top', 'bottom', 'right')})
+    ax11.matshow(X[np.ix_(rr, rr2)], cmap="Blues", aspect="auto")
+    ax11.tick_params(**{s: 'off' for s in ('top', 'bottom', 'right')})
     ax11.tick_params(labeltop='off', labelleft='off', labelright='on')
 
     ax11.set_xticks(np.arange(len(rr2)))
