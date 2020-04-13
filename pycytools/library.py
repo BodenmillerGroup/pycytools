@@ -6,16 +6,13 @@ Contains various functions for image processing
 
 from __future__ import division
 import numpy as np
-import matplotlib.pyplot as plt
 import skimage as sk
 import scipy as sp
 from scipy import ndimage as ndi
 
-from skimage import io
 from skimage import filters
 from skimage import measure
 from skimage import transform
-from skimage import feature
 from skimage import morphology
 
 import tifffile as tif

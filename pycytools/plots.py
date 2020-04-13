@@ -1,11 +1,6 @@
-import pycytools as pct
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
-import ipywidgets as ipw
-import functools as ft
 import pycytools.library as lib
-import skimage as ski
 from scipy.ndimage.filters import gaussian_filter
 
 

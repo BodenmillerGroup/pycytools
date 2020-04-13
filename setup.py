@@ -11,7 +11,7 @@ with open('LICENSE') as f:
 
 setup(
     name='pycytools',
-    version='0.0.2',
+    version='0.5.4',
     description='Tools to handle single cell data.',
     long_description=readme,
     author='Vito Zanotelli',
@@ -20,6 +20,7 @@ setup(
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
     install_requires = [
-                       'tifffile', 'scikit-image', 'scikit-learn','numpy','pandas', 'scipy', 'requests', 'matplotlib', 'seaborn'],
+                       'tifffile', 'scikit-image', 'numpy','pandas',
+        'scipy', 'requests', 'matplotlib', 'seaborn'],
 )
 
