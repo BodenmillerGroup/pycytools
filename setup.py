@@ -11,7 +11,7 @@ with open('LICENSE') as f:
 
 setup(
     name='pycytools',
-    version='0.6.5',
+    version='0.6.6',
     description='Helper functions to handle image cytometry data.',
     long_description=readme,
     author='Vito Zanotelli, Matthias Leutenegger, Bernd Bodenmiller',
