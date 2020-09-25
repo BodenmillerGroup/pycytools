@@ -13,10 +13,10 @@ def order_tree(Z, rd, M):
     def swap_subtrees(n):
         n.right, n.left = n.left, n.right
 
-    for v in xrange(Z.shape[0] * 2, Z.shape[0], -1):
+    for v in range(Z.shape[0] * 2, Z.shape[0], -1):
         L, R = rd[v].left.pre_order(), rd[v].right.pre_order()
         u, w = min(itertools.product(L, R),
-                   key=lambda (u, w): M[v, u, w])
+                   key=lambda u, w: M[v, u, w])
 
         if rd[v].left.count > 1:
             LR = rd[v].left.right.pre_order()
@@ -40,7 +40,7 @@ def optimal_scores(Z, rd, dists):
 
     # iterating through the linkage matrix guarantees
     # we never see a node before its children
-    for i in xrange(Z.shape[0]):
+    for i in range(Z.shape[0]):
         # linkage matrix starts at first non-leaf node
         v = n_nodes + i
         # the left and right nodes
