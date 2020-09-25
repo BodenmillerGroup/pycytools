@@ -11,16 +11,20 @@ with open('LICENSE') as f:
 
 setup(
     name='pycytools',
-    version='0.5.4',
-    description='Tools to handle single cell data.',
+    version='0.6.5',
+    description='Helper functions to handle image cytometry data.',
     long_description=readme,
-    author='Vito Zanotelli',
-    author_email='vito.zanotelli@uzh.ch',
+    author='Vito Zanotelli, Matthias Leutenegger, Bernd Bodenmiller',
+    author_email='vito.zanotelli@gmail.com',
     url='https://github.com/bodenmillerlab/pycytools',
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
-    install_requires = [
-                       'tifffile', 'scikit-image', 'numpy','pandas',
-        'scipy', 'requests', 'matplotlib', 'seaborn'],
+    install_requires = ['numpy',
+                        'scipy',
+                        'pandas',
+                        'requests',
+                        'scikit-image',
+                        'tifffile'
+                        ],
 )
 
