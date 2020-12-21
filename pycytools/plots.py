@@ -64,58 +64,71 @@ def plot_7_color_img(imc_img, metals, norm_perc=99.9, alphas=None, sigma=1, outl
     plt.imshow(pimg.squeeze(), interpolation='nearest')
     plt.axis('off')
 
-    # def ipw_marker_vs_marker(pdat, transf_dict, name_dict, col_level1='measure', col_level2='mass', cut_level='ImageNumber')
-#     stat = pdat.columns.get_level_values(col_level1)
-#     marker = pdat.columns.get_level_values(col_level2)
-#
-#
-#     #w = ipw.interactive(ft.partial(transf_dict=transf_dict),
-#     #                    _ipw_marker_vs_marker,
-#                         (pdat,stat1, m1,transform1, stat2, m2, transform2, fit, color_cut, fixed(transf_dict),)
+def plot_mask_contour(mask, ax=None, linewidths=0.5, linestyles=':', color='Gray', alpha=1):
+    """
+    Adds background mask contour
+    """
+    if ax is None:
+        fig = plt.figure(figsize=(20, 20))
+        ax = plt.gca()
+    ax.contour(mask, [0, 0.5], colors=[color], linewidths=linewidths, linestyles=linestyles, alpha=alpha)
+    return ax
 
-# def _ipw_marker_vs_marker(pdat,stat1, m1,transform1, stat2, m2, transform2, fit, color_cut, transf_dict, name_dict):
-#     dat1 = pdat[stat1]
-#     dat2 = pdat[stat2]
-#     m1 = pct.library.metal_from_name(m1)
-#     m2 = pct.library.metal_from_name(m2)
-#     x = dat1[m1]
-#     y = dat2[m2]
-#
-#     nafil = np.isfinite(x) & np.isfinite(y)
-#     x = x[nafil]
-#     y = y[nafil]
-#
-#     transfkt = transf_dict[transform]
-#     x = np.array(transfkt(x))
-#     y = np.array(transfkt(y))
-#
-#
-# def marker_vs_marker(x, y, fit,):
-#
-#     plt.close()
-#     g = sns.jointplot(x, y, alpha=0.5)
-#     if color_cut:
-#         r = np.arange(len(x))
-#         np.random.shuffle(r)
-#         c = pdat.index.get_level_values(level='ImageNumber')[nafil][r]
-#
-#         col_pal = sns.color_palette("hls",max(c)+1)
-#         cols = [col_pal[int(i)] for i in c]
-#         g.ax_joint.scatter(x[r],y[r], color=cols)
-#
-#     g.set_axis_labels(stat1+' '+ m1, stat2+' '+m2)
-#
-#     #g.title(np.corrcoef(x,y)[1,0])
-#
-#     if fit:
-#         lm_mod = lm.LinearRegression(fit_intercept=True)
-#         mod = lm.RANSACRegressor(lm_mod)
-#         mod.fit(x.reshape(-1, 1),y)
-#         y_pred = mod.predict(x.reshape(-1, 1))
-#         g.ax_joint.plot(x,y_pred, color='r')
-#
-#         plt.title('Pearson: {:.2}\n Spearman: {:.2}\nSlope: {:.2}\nIntercept: {:.2}\n'.format(
-#                 np.corrcoef(x,y)[1,0],scistats.spearmanr(x, y)[0],
-#                 mod.estimator_.coef_[0], mod.estimator_.intercept_))
-#     #else:
-#         #plt.title('Corcoef: {:.2}'.format(np.corrcoef(x,y)[1,0]))
+def plot_heatmask(img, *, cmap=None, cmap_mask=None, cmap_mask_alpha=0.3, colorbar=True, ax=None,
+                  bad_color='k', bad_alpha=1, crange=None, norm=None):
+    """
+    Plots an image with nice defaults for masked pixels.
+    """
+    if cmap is None:
+        cmap = plt.cm.viridis
+    cmap = copy.copy(cmap)
+    cmap.set_bad(bad_color, bad_alpha)
+    if ax is None:
+        plt.close()
+        fig, ax = plt.subplots(1, 1)
+    else:
+        fig = ax.get_figure()
+
+    cax = ax.imshow(img, cmap=cmap, interpolation="nearest", norm=norm)
+    if colorbar:
+        fig.colorbar(cax)
+
+    if crange is not None:
+        cax.set_clim(crange[0], crange[1])
+
+    if hasattr(img, "mask"):
+        mask_img = np.isnan(img)
+        if np.any(mask_img):
+            mask_img = np.ma.array(mask_img, mask=img.mask | (mask_img == False))
+            if cmap_mask is None:
+                cmap_mask = "Greys"
+            ax.imshow(
+                mask_img == 1,
+                cmap=cmap_mask,
+                alpha=cmap_mask_alpha,
+                interpolation="nearest",
+            )
+    ax.axis('off')
+    return ax
+
+def add_scalebar(
+        ax, resolution=0.000001, location=4, color="white", pad=0.5, frameon=False, **kwargs
+):
+    """
+    Adds a scalebar
+    """
+    scalebar = ScaleBar(
+        resolution, location=location, color=color, pad=pad, frameon=frameon, **kwargs
+    )  # 1 pixel = 0.2 meter
+    ax.add_artist(scalebar)
+
+def adapt_ax_clims(axs, imgnr=0):
+    """
+    Adapts color axes limits such that they are shared by the all images
+    """
+    caxs = [ax.images[imgnr] for ax in axs if len(ax.images) > 0]
+    clims = [cax.get_clim() for cax in caxs]
+    clims = [c for c in clims if c != (True, True)]
+    clim_all = [f(c) for f, c in zip([np.min, np.max], zip(*clims))]
+    for cax in caxs:
+        cax.set_clim(clim_all)

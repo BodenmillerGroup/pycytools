@@ -102,6 +102,7 @@ def flip_img(img, axis):
         img = np.flipud(img)
     else:
         raise NameError('Axis: 0: up down, 1:left right')
+    return img
 
 
 def crop_img_to_binary(img, tresh_img):
@@ -385,12 +386,13 @@ def add_slice_dimension(sl, append=True):
 
 def map_series_on_mask(mask, series, label=None):
     """
-    TODO: A good docstring here
-    :param mask:
-    :param series:
-    :param label:
-    :return:
+    Maps values on a mask
+    :param mask: A mask where label!=0 equals the object number
+    :param iterable: an iterable
+    :param label: labels of same lenght than iterables
+    :return: the mapped image
     """
+
     if label is None:
         label = series.index
 
@@ -594,3 +596,24 @@ def get_nb_dict(coldat):
         nb_dict[f].add(s)
 
     return nb_dict
+
+
+def map_group_re(x, re_str):
+    """
+    Maps a regular expression with matchgroups
+    to a iterable (e.g. column in a dataframe) and returns the
+    result as a data frame
+    Args:
+        x: iterable
+        re_str: a regular expression string with matchgroups
+    Return:
+        A dataframe with column names being matchgroups
+    """
+    qre = re.compile(re_str)
+    m_list = [
+        pd.DataFrame.from_dict([m.groupdict() for m in qre.finditer(s)]) for s in x
+    ]
+    res = pd.concat(m_list, ignore_index=True)
+    if hasattr(x, 'index'):
+        res.index = x.index
+    return res
