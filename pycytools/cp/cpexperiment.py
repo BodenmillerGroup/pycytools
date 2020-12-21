@@ -8,29 +8,8 @@ import matplotlib.pyplot as plt # '3.3.2'
 import objectrelations as objrel
 
 import pycytools.plots as plth
-
-COL_DATATYPE = 'data_type'
-COL_COLUMN_NAME = 'column_name'
-IS_FLOAT = 'float'
-LABEL = 'label'
-LABEL_MEAS = 'Intensity_MeanIntensity_LabelImg'
-
-# CP measurement variable
-IMAGE_ID = 'ImageId'
-IMAGE_NUMBER = 'ImageNumber'
-OBJECT_ID = 'ObjectId'
-OBJECT_NUMBER = 'ObjectNumber'
-OBJECT_MASK_NAME = 'ObjectMaskName'
-
-RUN = 'run'
-# Image meta
-COL_SCALING = 'scaling'
-
-# Object VAR variables
-FEATURE_NAME = 'feature_name'
-IMAGE_NAME = 'image_name'
-OBJECT_NAME = 'object_name'
-CHANNEL = 'channel'
+from pycytools.cp.vars import COL_DATATYPE, COL_COLUMN_NAME, IS_FLOAT, IMAGE_ID, IMAGE_NUMBER, OBJECT_ID, OBJECT_NUMBER, \
+    OBJECT_MASK_NAME, RUN, COL_SCALING, FEATURE_NAME, IMAGE_NAME, OBJECT_NAME, CHANNEL
 
 
 
@@ -102,12 +81,16 @@ def make_columns_categorical(dat, categorydict):
 
 
 class CellprofilerExperiment:
-    def __init__(self, run, fn_images, fn_images_var):
+
+    def __init__(self, run, fn_images, fn_images_var,
+                 default_imagename=None):
         self.run = run
         self.objects = {}
         self.obj_rel = None
         self.ioh = None
         self.ad_img = self._get_ad_img(run, fn_images, fn_images_var)
+        self.default_imagename = default_imagename
+        self.default_objectname = None
 
     @staticmethod
     def _get_ad_img(run, fn_images, fn_images_var):
@@ -116,11 +99,13 @@ class CellprofilerExperiment:
         return ad_img
 
     def add_object(self, fn_object, fn_object_var, object_name,
-                   object_mask_name=None):
+                   object_mask_name=None, is_default=False):
         ad_object = get_ad_obj(pd.read_csv(fn_object), pd.read_csv(fn_object_var), run=self.run,
                              object_name=object_name, object_mask_name=object_mask_name)
         scale_measurements(ad_object, self.ad_img)
         self.objects[object_name] = ad_object
+        if is_default:
+            self.default_objectname = object_name
         return self
 
     def add_iohelper(self, fol_images, fol_masks):
@@ -133,7 +118,7 @@ class CellprofilerExperiment:
     def add_object_relations(self, fn_relations):
         self.obj_rel = objrel.ObjectRelations(pd.read_csv(fn_relations))
 
-    def merge_img_meta(self, dat, meta_cols=(RUN, )):
+    def merge_img_meta(self, dat, meta_cols=(RUN,)):
         dat = dat.merge(self.ad_img.obs[list(meta_cols)], how='left', left_on='ImageId', right_index=True)
         return dat
 
