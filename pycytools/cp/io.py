@@ -37,7 +37,8 @@ class IoHelper:
         if img.ndim == 2:
             assert channel_number == 1, ValueError("Plane_number needs to be 1 for single channel images")
             return img
-        if img.shape[2] == self.dat_img.query(f'ImageId == {imid}')['image_shape_w'].iloc[0]:
-            return img[channel_number - 1, :, :].squeeze()
+        # if img.shape[2] == self.dat_img.query(f'{IMAGE_ID} == "{imid}"')[f'Width_{image_name}'].iloc[0]:
         else:
-            return img[:, :, channel_number - 1].squeeze()
+            return img[channel_number - 1, :, :].squeeze()
+        # else:
+        #    return img[:, :, channel_number - 1].squeeze()
