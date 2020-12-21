@@ -2,8 +2,9 @@ import copy
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib_scalebar import ScaleBar
+from matplotlib_scalebar.scalebar import ScaleBar
 from scipy.ndimage.filters import gaussian_filter
+from skimage import segmentation
 
 import pycytools.library as lib
 
@@ -76,6 +77,21 @@ def plot_mask_contour(mask, ax=None, linewidths=0.5, linestyles=':', color='Gray
         fig = plt.figure(figsize=(20, 20))
         ax = plt.gca()
     ax.contour(mask, [0, 0.5], colors=[color], linewidths=linewidths, linestyles=linestyles, alpha=alpha)
+    return ax
+
+
+def plot_mask_boundaries(mask, ax=None, cmap='Greys_r', alpha=1):
+    """
+    Adds background mask contour
+    """
+    if ax is None:
+        fig = plt.figure(figsize=(20, 20))
+        ax = plt.gca()
+    boundaries = segmentation.find_boundaries(mask).astype(float)
+    boundaries[boundaries == 0] = np.nan
+    cmap = copy.copy(plt.cm.get_cmap(cmap))
+    cmap.set_bad('k', 0)
+    ax.imshow(boundaries, cmap=cmap, alpha=alpha, interpolation="nearest", )
     return ax
 
 
