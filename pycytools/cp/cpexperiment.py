@@ -1,4 +1,5 @@
 # %%
+import pathlib
 import warnings
 
 import numpy as np  # '1.19.1'
@@ -110,6 +111,7 @@ class CellprofilerExperiment:
     def add_panel(self, fn_panel, col_channel):
         panel = pd.read_csv(fn_panel)
         panel[CHANNEL_ID] = panel[col_channel]
+        panel = panel.drop(columns=CHANNEL, errors='ignore')
         self.panel = panel
         return self
 
@@ -154,3 +156,40 @@ class CellprofilerExperiment:
         if img_meta_cols is not None:
             pdat = self.merge_img_meta(pdat, meta_cols=img_meta_cols)
         return pdat
+
+    def extend_var_with_panel(self, var):
+        idx_name = var.index.name
+        return (var.reset_index(drop=False)
+                .merge(self.panel, on=CHANNEL_ID, how='left',
+                       suffixes=('', '_panel'))
+                .set_index(idx_name)
+                )
+
+    @classmethod
+    def from_imcsegpipe_cpout(cls, fol_cpout, name,
+                              col_channel='Metal Tag'):
+        fol_base = pathlib.Path(fol_cpout)
+        fn_cell = fol_base / 'cell.csv'
+        fn_img = fol_base / 'Image.csv'
+
+        fn_cell_var = fol_base / 'var_cell.csv'
+        fn_img_var = fol_base / 'var_Image.csv'
+
+        fol_images = fol_base / 'images'
+        fol_masks = fol_base / 'masks'
+        img_parents = {'FullStackFiltered': 'FullStack',
+                       'FullStackComp': 'FullStack',
+                       'ProbSegmentation': 'ProbabStack'}
+
+        fn_panel = fol_base / 'panel.csv'
+        col_channel = col_channel
+        cpe = (cls(name, fn_images=fn_img,
+                   fn_images_var=fn_img_var, img_parent_dict=img_parents)
+               .add_object(fn_cell, fn_cell_var, object_name='cell',
+                           object_mask_name='CellImage')
+               .add_iohelper(fol_images, fol_masks,
+                             default_image_name='FullStackFiltered',
+                             default_object_name='cell')
+               .add_panel(fn_panel, col_channel)
+               )
+        return cpe
