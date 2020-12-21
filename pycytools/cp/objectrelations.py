@@ -60,6 +60,9 @@ class ObjectRelations:
             dat_rel = self.child[objectname_1][objectname_2]
         elif rel == self.PARENT:
             dat_rel = self.parent[objectname_1][objectname_2]
+        else:
+            raise ValueError(
+                f'rel needs to be one of {", ".join([self.NEIGHBORS, self.CHILD, self.PARENT])} but is "{rel}"')
 
         dat_merged = (dat_1[[self.OBJ_NUMBER, self.IMG_NUMBER]].reset_index(drop=False)
                       .merge(dat_rel, left_on=[self.OBJ_NUMBER, self.IMG_NUMBER],
@@ -71,6 +74,6 @@ class ObjectRelations:
                              right_on=[self.OBJ_NUMBER, self.IMG_NUMBER],
                              left_on=[self.SECOND_OBJ_NUMBER, self.SECOND_IMG_NUMBER])
                       .drop(columns=[self.OBJ_NUMBER, self.IMG_NUMBER, self.SECOND_OBJ_NUMBER, self.SECOND_IMG_NUMBER])
-                      .set_index(OBJ_ID)
+                      .set_index(self.OBJ_ID)
                       )
         return dat_merged

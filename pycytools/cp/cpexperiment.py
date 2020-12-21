@@ -1,16 +1,15 @@
 # %%
-import scanpy as sp # '1.6.0'
+import matplotlib.pyplot as plt  # '3.3.2'
+import numpy as np  # '1.19.1'
+import pandas as pd  # '1.1.2'
+import scanpy as sp  # '1.6.0'
 
-import numpy as np # '1.19.1'
-import pandas as pd # '1.1.2'
-
-import matplotlib.pyplot as plt # '3.3.2'
-import objectrelations as objrel
-
+import pycytools.cp.io as cpio
+import pycytools.cp.objectrelations as objrel
+import pycytools.library as lib
 import pycytools.plots as plth
 from pycytools.cp.vars import COL_DATATYPE, COL_COLUMN_NAME, IS_FLOAT, IMAGE_ID, IMAGE_NUMBER, OBJECT_ID, OBJECT_NUMBER, \
     OBJECT_MASK_NAME, RUN, COL_SCALING, FEATURE_NAME, IMAGE_NAME, OBJECT_NAME, CHANNEL
-
 
 
 def cp_to_ad(dat_meas, dat_var):
@@ -23,6 +22,7 @@ def cp_to_ad(dat_meas, dat_var):
     x = dat_meas[var.index]
     ad = sp.AnnData(x, obs=obs, var=var)
     return ad
+
 
 def add_image_id(ad, run):
     """
@@ -101,17 +101,23 @@ class CellprofilerExperiment:
     def add_object(self, fn_object, fn_object_var, object_name,
                    object_mask_name=None, is_default=False):
         ad_object = get_ad_obj(pd.read_csv(fn_object), pd.read_csv(fn_object_var), run=self.run,
-                             object_name=object_name, object_mask_name=object_mask_name)
+                               object_name=object_name, object_mask_name=object_mask_name)
         scale_measurements(ad_object, self.ad_img)
         self.objects[object_name] = ad_object
         if is_default:
             self.default_objectname = object_name
         return self
 
+    @property
+    def default_mask(self):
+        return self.objects[self.default_objectname].uns[OBJECT_MASK_NAME]
+
     def add_iohelper(self, fol_images, fol_masks):
-        ioh = plth.IoHelper(self.ad_img.obs,
+        ioh = cpio.IoHelper(self.ad_img.obs,
                             fol_images=fol_images,
-                            fol_masks=fol_masks)
+                            fol_masks=fol_masks,
+                            default_image=self.default_imagename,
+                            default_mask=self.default_mask)
         self.ioh = ioh
         return self
 
@@ -159,15 +165,10 @@ class CellprofilerExperiment:
             mask = self.ioh.get_mask(imid, mask_name=object_name)
             values = ad[dat.index, :].X.squeeze()
             labels = dat[OBJECT_NUMBER]
-            img = plth.map_series_on_mask(mask, labels, values)
+            img = lib.map_series_on_mask(mask, labels, values)
 
             colorbar = (ax == axs[-1]) and add_colorbar
             plth.plot_heatmask(img, ax=ax, colorbar=colorbar, bad_alpha=bad_alpha, **kwargs)
             ax.axis('off')
         plth.adapt_ax_clims(axs)
         return axs
-
-
-
-
-

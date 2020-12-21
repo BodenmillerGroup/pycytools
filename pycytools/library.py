@@ -6,19 +6,16 @@ Contains various functions for image processing
 
 from __future__ import division
 
-import json
 import os
+import re
 
 import numpy as np
 import pandas as pd
-import requests
 import scipy as sp
 import skimage as sk
 import tifffile
-import tifffile as tif
 from scipy import ndimage as ndi
 from skimage import filters
-from skimage import measure
 from skimage import morphology
 from skimage import transform
 
@@ -117,7 +114,6 @@ def crop_img_to_binary(img, tresh_img):
 def stretch_imgs_equal(img_list,
                        stretch_dim='w',  # w: widht, h: height, b: both
                        direction='min',  # min or max
-                       interpol=None  # which interpolation algorithm
                        ):
     heights = np.array([float(img.shape[0]) for img in img_list])
     widths = np.array([float(img.shape[1]) for img in img_list])
@@ -173,8 +169,6 @@ def l2l_corr(img, dim=0):
 
 
 ### tools for dealing with segmentation masks
-
-
 
 
 ## working with masks
@@ -514,7 +508,6 @@ def metal_from_name(name, sep=None):
     if sep is None:
         sep = '_'
     return name.split(sep)[-1]
-
 
 
 def aggregate_nb_data(cell_dat, nb_dict, fil=None, agg_fkt=np.mean, out_array=None):

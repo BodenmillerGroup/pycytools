@@ -1,5 +1,8 @@
+import copy
+
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib_scalebar import ScaleBar
 from scipy.ndimage.filters import gaussian_filter
 
 import pycytools.library as lib
@@ -64,6 +67,7 @@ def plot_7_color_img(imc_img, metals, norm_perc=99.9, alphas=None, sigma=1, outl
     plt.imshow(pimg.squeeze(), interpolation='nearest')
     plt.axis('off')
 
+
 def plot_mask_contour(mask, ax=None, linewidths=0.5, linestyles=':', color='Gray', alpha=1):
     """
     Adds background mask contour
@@ -73,6 +77,7 @@ def plot_mask_contour(mask, ax=None, linewidths=0.5, linestyles=':', color='Gray
         ax = plt.gca()
     ax.contour(mask, [0, 0.5], colors=[color], linewidths=linewidths, linestyles=linestyles, alpha=alpha)
     return ax
+
 
 def plot_heatmask(img, *, cmap=None, cmap_mask=None, cmap_mask_alpha=0.3, colorbar=True, ax=None,
                   bad_color='k', bad_alpha=1, crange=None, norm=None):
@@ -111,6 +116,7 @@ def plot_heatmask(img, *, cmap=None, cmap_mask=None, cmap_mask_alpha=0.3, colorb
     ax.axis('off')
     return ax
 
+
 def add_scalebar(
         ax, resolution=0.000001, location=4, color="white", pad=0.5, frameon=False, **kwargs
 ):
@@ -121,6 +127,7 @@ def add_scalebar(
         resolution, location=location, color=color, pad=pad, frameon=frameon, **kwargs
     )  # 1 pixel = 0.2 meter
     ax.add_artist(scalebar)
+
 
 def adapt_ax_clims(axs, imgnr=0):
     """

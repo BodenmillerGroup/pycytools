@@ -1,6 +1,10 @@
 import functools
-from pycytools.cp.vars import COL_DATATYPE, COL_COLUMN_NAME, IS_FLOAT, IMAGE_ID, IMAGE_NUMBER, OBJECT_ID, OBJECT_NUMBER, \
-    OBJECT_MASK_NAME, RUN, COL_SCALING, FEATURE_NAME, IMAGE_NAME, OBJECT_NAME, CHANNEL
+
+import tifffile
+
+from pycytools.cp.vars import IMAGE_ID
+
+
 class IoHelper:
     """
     Helper class for lazy image and mask IO
@@ -24,7 +28,7 @@ class IoHelper:
     @functools.lru_cache()
     def get_image(self, imid, image_name=None):
         if image_name is None:
-            image_name=self.default_image
+            image_name = self.default_image
         img = self.dat_img.query(f'{IMAGE_ID}== "{imid}"')[f'FileName_{image_name}'].iloc[0]
         return tifffile.imread(self.fol_images / img, out='memmap')
 
@@ -37,4 +41,3 @@ class IoHelper:
             return img[channel_number - 1, :, :].squeeze()
         else:
             return img[:, :, channel_number - 1].squeeze()
-
