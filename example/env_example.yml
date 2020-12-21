@@ -1,0 +1,24 @@
+name: pycytools
+channels:
+  - conda-forge
+  - bioconda
+  - r
+  - defaults
+dependencies:
+  - python
+  - pip
+  - nodejs>=10
+  - ipympl
+  - jupyterlab
+  - notebook
+  - scanpy
+  - matplotlib
+  - plotnine
+  - seaborn
+  - tifffile
+  - scipy
+  - scikit-image
+  - matplotlib-scalebar
+  - pandas
+  - pip:
+      git+https://github.com/BodenmillerGroup/pycytools.git@development
