@@ -21,4 +21,4 @@ dependencies:
   - matplotlib-scalebar
   - pandas
   - pip:
-      git+https://github.com/BodenmillerGroup/pycytools.git@development
+      - git+https://github.com/BodenmillerGroup/pycytools.git@development
