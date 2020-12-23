@@ -67,8 +67,6 @@ class ObjectRelations:
                 SECOND_OBJ_NUMBER, SECOND_IMG_NUMBER
                 ]
         dat_rel = dat_rel[list(set(cols + rel_vars))]
-        print(list({OBJ_NUMBER, IMG_NUMBER, FIRST_OBJ_NUMBER, FIRST_IMG_NUMBER} - set(rel_vars)))
-        print(rel_vars)
 
         dat_merged = (dat_1[[OBJ_NUMBER, IMG_NUMBER]].reset_index(drop=False)
                       .merge(dat_rel, left_on=[OBJ_NUMBER, IMG_NUMBER],
