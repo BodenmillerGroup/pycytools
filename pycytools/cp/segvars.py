@@ -1,8 +1,0 @@
-COL_DATATYPE = 'data_type'
-COL_COLUMN_NAME = 'column_name'
-is_float = 'float'
-label = 'label'
-label_meas = 'Intensity_MeanIntensity_LabelImg'
-cropname = 'cropname'
-segimage = 'segimage'
-segsettings = 'segsettings'
